@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Manager - Teste</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 { text-align: center; color: #FF6B35; margin-bottom: 20px; }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #FF6B35;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        button:active { opacity: 0.8; }
+        .msg {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .info { background: #e3f2fd; color: #1565c0; }
+        .success { background: #e8f5e9; color: #2e7d32; }
+        .error { background: #ffebee; color: #c62828; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🍽️ Teste Login</h2>
+        
+        <div id="status" class="msg info">⏳ Verificando sistema...</div>
+        
+        <input type="email" id="email" placeholder="Email do Supabase">
+        <input type="password" id="password" placeholder="Senha do Supabase">
+        
+        <button onclick="fazerLogin()">ENTRAR</button>
+        <button onclick="testarTabelas()" style="background: #1565c0; margin-top: 8px;">Verificar Banco</button>
+        
+        <div id="resultado"></div>
+    </div>
+
+    <script>
+        // ============== SUAS CHAVES ==============
+        const URL = 'https://egoygpilshbzkpbznglu.supabase.co';
+        const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnb3lncGlsc2hiemtwYnpuZ2x1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDA1OTgsImV4cCI6MjA5MzkxNjU5OH0.xpWw1jwdMK_lJxSF5IzUtsMt-H2PA8E1O8uai_QoUBc';
+        // ==========================================
+
+        const db = supabase.createClient(URL, KEY);
+
+        // Verificar conexão com banco
+        async function testarTabelas() {
+            const div = document.getElementById('resultado');
+            div.innerHTML = '<p class="msg info">⏳ Verificando banco de dados...</p>';
+            
+            const { data, error } = await db.from('tables').select('*').limit(1);
+            
+            if (error) {
+                div.innerHTML = `<p class="msg error">❌ ERRO NO BANCO: ${error.message}</p>`;
+            } else {
+                div.innerHTML = `<p class="msg success">✅ BANCO OK! ${data.length} mesa(s) encontrada(s)</p>`;
+            }
+        }
+
+        // Fazer login
+        async function fazerLogin() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const div = document.getElementById('resultado');
+            
+            if (!email || !password) {
+                div.innerHTML = '<p class="msg error">❌ Preencha email E senha!</p>';
+                return;
+            }
+            
+            div.innerHTML = '<p class="msg info">⏳ Conectando ao servidor...</p>';
+            
+            try {
+                const { data, error } = await db.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) {
+                    div.innerHTML = `<p class="msg error">
+                        ❌ FALHA NO LOGIN<br>
+                        <small>Motivo: ${error.message}</small><br>
+                        <small>Status: ${error.status || 'desconhecido'}</small>
+                    </p>`;
+                } else if (data.user) {
+                    div.innerHTML = `<p class="msg success">
+                        ✅ LOGIN BEM-SUCEDIDO!<br>
+                        <small>Email: ${data.user.email}</small><br>
+                        <small>ID: ${data.user.id.substring(0, 12)}...</small>
+                    </p>`;
+                } else {
+                    div.innerHTML = '<p class="msg error">❌ Resposta inesperada do servidor</p>';
+                }
+            } catch (err) {
+                div.innerHTML = `<p class="msg error">❌ ERRO DE REDE: ${err.message}</p>`;
+            }
+        }
+
+        // Testar conexão ao carregar
+        (async () => {
+            const statusEl = document.getElementById('status');
+            
+            try {
+                const { error } = await db.from('tables').select('count');
+                
+                if (error) {
+                    statusEl.className = 'msg error';
+                    statusEl.textContent = '❌ Erro: ' + error.message;
+                } else {
+                    statusEl.className = 'msg success';
+                    statusEl.textContent = '✅ Sistema conectado ao Supabase!';
+                }
+            } catch (e) {
+                statusEl.className = 'msg error';
+                statusEl.textContent = '❌ Sem conexão: ' + e.message;
+            }
+        })();
+    </script>
+</body>
+</html>
