@@ -2,198 +2,294 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restaurante</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #f5f5f5; }
-        .hidden { display: none !important; }
+        body { font-family: Arial, sans-serif; }
         
-        /* LOGIN */
-        #loginScreen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(180deg, #FF6B35 0%, #004E89 100%); padding: 20px; }
-        .login-box { background: white; border-radius: 16px; padding: 30px; width: 100%; max-width: 380px; text-align: center; }
-        .login-box .icon { font-size: 60px; margin-bottom: 16px; }
-        .login-box h2 { margin-bottom: 24px; color: #333; }
-        .login-box input { width: 100%; padding: 14px; margin: 8px 0; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; }
-        .login-box button { width: 100%; padding: 16px; background: #FF6B35; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; margin-top: 16px; cursor: pointer; }
+        /* TELA DE LOGIN */
+        #telaLogin { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            background: linear-gradient(#FF6B35, #004E89); 
+            padding: 20px; 
+        }
+        .login-box { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 16px; 
+            width: 100%; 
+            max-width: 350px; 
+            text-align: center; 
+        }
+        .login-box h1 { margin-bottom: 20px; }
+        .login-box input { 
+            width: 100%; 
+            padding: 14px; 
+            margin: 8px 0; 
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            font-size: 16px; 
+        }
+        .login-box button { 
+            width: 100%; 
+            padding: 16px; 
+            background: #FF6B35; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 18px; 
+            font-weight: bold; 
+            margin-top: 12px; 
+            cursor: pointer; 
+        }
         
-        /* APP */
-        #appScreen { display: flex; flex-direction: column; height: 100vh; }
-        .topbar { background: #FF6B35; color: white; padding: 16px; text-align: center; font-size: 20px; font-weight: bold; }
-        .main { flex: 1; overflow-y: auto; padding: 16px; }
-        .navbar { display: flex; background: white; border-top: 1px solid #e0e0e0; }
-        .navbar button { flex: 1; padding: 12px 4px; background: none; border: none; color: #999; font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .navbar button.active { color: #FF6B35; }
-        .navbar button i { font-size: 20px; }
+        /* TELA PRINCIPAL */
+        #telaApp { display: none; flex-direction: column; height: 100vh; }
+        .topo { background: #FF6B35; color: white; padding: 16px; text-align: center; font-size: 20px; font-weight: bold; }
+        .conteudo { flex: 1; overflow-y: auto; padding: 16px; background: #f5f5f5; }
+        .menu { display: flex; background: white; border-top: 1px solid #ddd; }
+        .menu button { 
+            flex: 1; 
+            padding: 12px 4px; 
+            background: none; 
+            border: none; 
+            font-size: 12px; 
+            cursor: pointer; 
+            color: #666; 
+        }
+        .menu button.ativo { color: #FF6B35; font-weight: bold; }
         
-        /* TABLES */
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .card { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; border-left: 4px solid #ccc; }
-        .card.free { border-left-color: #4CAF50; }
-        .card.occupied { border-left-color: #FF9800; }
-        .card h3 { font-size: 28px; margin-bottom: 8px; }
-        .card .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; }
-        .badge-free { background: #e8f5e9; color: #4CAF50; }
-        .badge-occupied { background: #fff3e0; color: #FF9800; }
-        .card .price { margin-top: 8px; font-weight: bold; color: #FF6B35; font-size: 18px; }
+        /* MESAS */
+        .mesas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .mesa { 
+            background: white; 
+            padding: 16px; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #4CAF50;
+        }
+        .mesa.ocupada { border-left-color: #FF9800; }
+        .mesa h2 { font-size: 32px; margin-bottom: 4px; }
+        .mesa .status { font-size: 12px; margin-bottom: 8px; }
+        .status-livre { color: #4CAF50; }
+        .status-ocupada { color: #FF9800; }
+        .mesa .valor { font-size: 20px; font-weight: bold; color: #FF6B35; }
         
         /* MODAL */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; justify-content: center; align-items: flex-end; }
-        .modal.show { display: flex; }
-        .modal .body { background: white; border-radius: 16px 16px 0 0; width: 100%; max-height: 70vh; overflow-y: auto; padding: 20px; }
-        .modal .body h3 { margin-bottom: 16px; }
-        .item { display: flex; justify-content: space-between; padding: 14px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
-        .item .price { color: #FF6B35; font-weight: bold; }
-        .btn { display: block; width: 100%; padding: 14px; background: #FF6B35; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; margin-top: 12px; cursor: pointer; text-align: center; }
-        .btn.red { background: #E74C3C; }
-        .btn.green { background: #4CAF50; }
+        .fundo { 
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.5); 
+            z-index: 99;
+            justify-content: center;
+            align-items: flex-end;
+        }
+        .fundo.mostrar { display: flex; }
+        .modal { 
+            background: white; 
+            border-radius: 16px 16px 0 0; 
+            width: 100%; 
+            max-height: 70vh; 
+            overflow-y: auto; 
+            padding: 20px; 
+        }
+        .modal h3 { margin-bottom: 16px; }
+        .produto { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 14px; 
+            border-bottom: 1px solid #eee; 
+            cursor: pointer; 
+        }
+        .produto:active { background: #f0f0f0; }
+        .preco { color: #FF6B35; font-weight: bold; }
+        .botao { 
+            display: block; 
+            width: 100%; 
+            padding: 14px; 
+            background: #FF6B35; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            margin-top: 12px; 
+            cursor: pointer; 
+            text-align: center; 
+        }
+        .botao.vermelho { background: #E74C3C; }
         
-        .total { display: flex; justify-content: space-between; padding: 16px 0; font-size: 22px; font-weight: bold; border-top: 2px solid #e0e0e0; margin-top: 12px; }
+        .item-pedido { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .total { display: flex; justify-content: space-between; padding: 16px 0; font-size: 22px; font-weight: bold; border-top: 2px solid #333; margin-top: 12px; }
         
-        /* KITCHEN */
-        .order-card { background: white; border-radius: 12px; padding: 14px; margin-bottom: 10px; border-left: 4px solid #FF6B35; }
-        .order-card .top { display: flex; justify-content: space-between; margin-bottom: 6px; }
-        .order-card .table { font-weight: bold; font-size: 16px; }
-        .order-card .time { color: #999; font-size: 12px; }
-        
-        .toast { position: fixed; top: 20px; left: 20px; right: 20px; background: #333; color: white; padding: 14px; border-radius: 8px; text-align: center; z-index: 9999; }
+        .aviso { text-align: center; padding: 40px; color: #999; font-size: 18px; }
     </style>
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="loginScreen">
+<!-- TELA DE LOGIN -->
+<div id="telaLogin">
     <div class="login-box">
-        <div class="icon">🍽️</div>
-        <h2>Restaurante</h2>
+        <h1>🍽️ Restaurante</h1>
         <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Senha">
-        <button onclick="fazerLogin()">Entrar</button>
+        <input type="password" id="senha" placeholder="Senha">
+        <button onclick="entrar()">Entrar</button>
     </div>
 </div>
 
-<!-- APP -->
-<div id="appScreen" class="hidden" style="display: none; flex-direction: column; height: 100vh;">
-    <div class="topbar">🍽️ Restaurante</div>
-    <div class="main" id="content"></div>
-    <div class="navbar">
-        <button class="active" onclick="tela('mesas')"><i class="fas fa-th-large"></i> Mesas</button>
-        <button onclick="tela('comandas')"><i class="fas fa-list"></i> Comandas</button>
-        <button onclick="tela('cozinha')"><i class="fas fa-fire"></i> Cozinha</button>
-        <button onclick="sair()"><i class="fas fa-sign-out-alt"></i> Sair</button>
+<!-- TELA DO APP -->
+<div id="telaApp">
+    <div class="topo">🍽️ Restaurante</div>
+    <div class="conteudo" id="conteudo"></div>
+    <div class="menu">
+        <button class="ativo" onclick="mostrar('mesas')">🪑 Mesas</button>
+        <button onclick="mostrar('comandas')">📋 Comandas</button>
+        <button onclick="mostrar('cozinha')">🍳 Cozinha</button>
+        <button onclick="sair()">🚪 Sair</button>
     </div>
 </div>
 
 <!-- MODAL -->
-<div class="modal" id="modal"><div class="body" id="modalBody"></div></div>
+<div class="fundo" id="fundo"><div class="modal" id="modal"></div></div>
 
 <script>
 // CONFIGURAÇÃO
-const SUPA_URL = 'https://egoygpilshbzkpbznglu.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnb3lncGlsc2hiemtwYnpuZ2x1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDA1OTgsImV4cCI6MjA5MzkxNjU5OH0.xpWw1jwdMK_lJxSF5IzUtsMt-H2PA8E1O8uai_QoUBc';
-const db = supabase.createClient(SUPA_URL, SUPA_KEY);
+const url = 'https://egoygpilshbzkpbznglu.supabase.co';
+const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnb3lncGlsc2hiemtwYnpuZ2x1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDA1OTgsImV4cCI6MjA5MzkxNjU5OH0.xpWw1jwdMK_lJxSF5IzUtsMt-H2PA8E1O8uai_QoUBc';
+const db = supabase.createClient(url, key);
 
-// LOGIN
-async function fazerLogin() {
+// ENTRAR
+async function entrar() {
     const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+    const senha = document.getElementById('senha').value;
     
-    if (!email || !password) { alert('Preencha email e senha!'); return; }
+    if (!email || !senha) { alert('Preencha email e senha!'); return; }
     
-    const { data, error } = await db.auth.signInWithPassword({ email, password });
+    const { error } = await db.auth.signInWithPassword({ email, password: senha });
     
     if (error) {
         alert('Erro: ' + error.message);
     } else {
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('appScreen').style.display = 'flex';
-        document.getElementById('appScreen').classList.remove('hidden');
+        document.getElementById('telaLogin').style.display = 'none';
+        document.getElementById('telaApp').style.display = 'flex';
         carregarMesas();
     }
 }
 
+// SAIR
 async function sair() {
     await db.auth.signOut();
-    document.getElementById('appScreen').style.display = 'none';
-    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('telaApp').style.display = 'none';
+    document.getElementById('telaLogin').style.display = 'flex';
 }
 
-// NAVEGAÇÃO
-async function tela(t) {
-    document.querySelectorAll('.navbar button').forEach(b => b.classList.remove('active'));
-    event.target.closest('button').classList.add('active');
+// MOSTRAR TELA
+async function mostrar(tela) {
+    document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo'));
+    event.target.classList.add('ativo');
     
-    if (t === 'mesas') await carregarMesas();
-    if (t === 'comandas') await carregarComandas();
-    if (t === 'cozinha') await carregarCozinha();
+    if (tela === 'mesas') await carregarMesas();
+    if (tela === 'comandas') await carregarComandas();
+    if (tela === 'cozinha') await carregarCozinha();
 }
 
-// MESAS
+// CARREGAR MESAS
 async function carregarMesas() {
-    const { data: tables } = await db.from('tables').select('*').order('number');
+    const { data: mesas } = await db.from('tables').select('*').order('number');
     
-    let html = '<div class="grid">';
-    tables.forEach(t => {
+    let html = '<div class="mesas">';
+    
+    mesas.forEach(m => {
         html += `
-            <div class="card ${t.status}" onclick="abrirMesa(${t.id}, '${t.status}')">
-                <h3>Mesa ${t.number}</h3>
-                <span class="badge ${t.status === 'free' ? 'badge-free' : 'badge-occupied'}">${t.status === 'free' ? 'Livre' : 'Ocupada'}</span>
-                ${t.current_total ? `<div class="price">R$ ${t.current_total.toFixed(2)}</div>` : ''}
+            <div class="mesa ${m.status}" onclick="abrirMesa(${m.id}, '${m.status}')">
+                <h2>${m.number}</h2>
+                <div class="status ${m.status === 'free' ? 'status-livre' : 'status-ocupada'}">
+                    ${m.status === 'free' ? 'LIVRE' : 'OCUPADA'}
+                </div>
+                ${m.current_total ? `<div class="valor">R$ ${m.current_total.toFixed(2)}</div>` : ''}
             </div>`;
     });
-    html += '</div>';
     
-    document.getElementById('content').innerHTML = html;
+    html += '</div>';
+    document.getElementById('conteudo').innerHTML = html;
 }
 
+// ABRIR MESA
 async function abrirMesa(id, status) {
     if (status === 'free') {
-        const { data: user } = await db.auth.getUser();
+        // Criar comanda
+        const { data: userData } = await db.auth.getUser();
+        
         const { data: order } = await db.from('orders').insert({
             table_id: id,
-            waiter_id: user.user.id,
+            waiter_id: userData.user.id,
             status: 'open'
         }).select().single();
         
         await db.from('tables').update({ status: 'occupied' }).eq('id', id);
+        
         mostrarProdutos(order.id, id);
     } else {
-        const { data: order } = await db.from('orders').select('*, order_items(*)').eq('table_id', id).eq('status', 'open').single();
+        // Ver comanda existente
+        const { data: order } = await db.from('orders')
+            .select('*, order_items(*)')
+            .eq('table_id', id)
+            .eq('status', 'open')
+            .single();
         
-        if (!order) { alert('Comanda não encontrada'); return; }
+        if (!order) { alert('Comanda não encontrada!'); return; }
         
         const items = order.order_items || [];
         const total = items.reduce((s, i) => s + (i.total_price || 0), 0);
         
         let html = '<h3>Comanda - Mesa ' + id + '</h3>';
-        items.forEach(i => {
-            html += `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;"><span>${i.quantity}x ${i.product_name}</span><span>R$ ${i.total_price.toFixed(2)}</span></div>`;
-        });
-        html += `<div class="total"><span>Total</span><span>R$ ${total.toFixed(2)}</span></div>`;
-        html += `<button class="btn" onclick="mostrarProdutos('${order.id}', ${id})">+ Adicionar Produto</button>`;
-        html += `<button class="btn red" onclick="fecharConta('${order.id}', ${id})">Fechar Conta</button>`;
         
-        document.getElementById('modalBody').innerHTML = html;
-        document.getElementById('modal').classList.add('show');
+        if (items.length === 0) {
+            html += '<p style="text-align:center;padding:20px;">Nenhum item</p>';
+        } else {
+            items.forEach(i => {
+                html += `<div class="item-pedido"><span>${i.quantity}x ${i.product_name}</span><span>R$ ${i.total_price.toFixed(2)}</span></div>`;
+            });
+            html += `<div class="total"><span>Total</span><span>R$ ${total.toFixed(2)}</span></div>`;
+        }
+        
+        html += `<button class="botao" onclick="mostrarProdutos('${order.id}', ${id})">+ Adicionar Produtos</button>`;
+        html += `<button class="botao vermelho" onclick="fecharConta('${order.id}', ${id})">Fechar Conta</button>`;
+        
+        document.getElementById('modal').innerHTML = html;
+        document.getElementById('fundo').classList.add('mostrar');
     }
 }
 
+// MOSTRAR PRODUTOS
 async function mostrarProdutos(orderId, tableId) {
-    const { data: products } = await db.from('products').select('*').eq('is_active', true);
+    const { data: produtos } = await db.from('products').select('*').eq('is_active', true);
     
-    let html = '<h3>Selecione o Produto</h3>';
-    products.forEach(p => {
-        html += `<div class="item" onclick="adicionarItem('${orderId}', '${p.id}', '${p.name}', ${p.price}, ${tableId})"><span>${p.name}</span><span class="price">R$ ${p.price.toFixed(2)}</span></div>`;
+    let html = '<h3>Adicionar Produto</h3>';
+    
+    produtos.forEach(p => {
+        html += `<div class="produto" onclick="adicionar('${orderId}', '${p.id}', '${p.name}', ${p.price}, ${tableId})">
+            <span>${p.name}</span><span class="preco">R$ ${p.price.toFixed(2)}</span>
+        </div>`;
     });
-    html += `<button class="btn" onclick="fecharModal(); carregarMesas();">Voltar</button>`;
     
-    document.getElementById('modalBody').innerHTML = html;
-    document.getElementById('modal').classList.add('show');
+    html += '<button class="botao vermelho" onclick="fecharModal()">Voltar</button>';
+    
+    document.getElementById('modal').innerHTML = html;
+    document.getElementById('fundo').classList.add('mostrar');
 }
 
-async function adicionarItem(orderId, productId, name, price, tableId) {
+// ADICIONAR ITEM
+async function adicionar(orderId, productId, name, price, tableId) {
     await db.from('order_items').insert({
         order_id: orderId,
         product_id: productId,
@@ -203,87 +299,88 @@ async function adicionarItem(orderId, productId, name, price, tableId) {
         total_price: price
     });
     
-    mostrarToast('✅ ' + name + ' adicionado');
-    
-    // Recarregar para mostrar mais produtos
+    alert('✅ ' + name + ' adicionado!');
     mostrarProdutos(orderId, tableId);
 }
 
+// FECHAR CONTA
 async function fecharConta(orderId, tableId) {
     if (!confirm('Fechar esta conta?')) return;
     
-    const opcao = prompt('Pagamento:\n1 - Dinheiro\n2 - Pix\n3 - Cartão');
+    const op = prompt('Pagamento:\n1-Dinheiro\n2-Pix\n3-Cartão');
     const metodos = {'1':'Dinheiro','2':'Pix','3':'Cartão'};
     
     await db.from('orders').update({
         status: 'completed',
-        payment_method: metodos[opcao] || 'Dinheiro'
+        payment_method: metodos[op] || 'Dinheiro'
     }).eq('id', orderId);
     
-    await db.from('tables').update({
-        status: 'free',
-        current_total: 0
-    }).eq('id', tableId);
+    await db.from('tables').update({ status: 'free', current_total: 0 }).eq('id', tableId);
     
     fecharModal();
     carregarMesas();
-    mostrarToast('✅ Conta fechada!');
 }
 
 // COZINHA
 async function carregarCozinha() {
-    const { data: orders } = await db.from('orders').select('*, tables(number)').eq('status', 'open');
+    const { data: orders } = await db.from('orders')
+        .select('*, tables(number)')
+        .eq('status', 'open');
     
     if (!orders || orders.length === 0) {
-        document.getElementById('content').innerHTML = '<p style="text-align:center;padding:40px;color:#999;">✅ Nenhum pedido pendente</p>';
+        document.getElementById('conteudo').innerHTML = '<div class="aviso">✅ Nenhum pedido pendente!</div>';
         return;
     }
     
     let html = '';
+    
     for (const order of orders) {
         const { data: items } = await db.from('order_items').select('*').eq('order_id', order.id);
+        
         if (items) {
             items.forEach(item => {
-                html += `<div class="order-card">
-                    <div class="top"><span class="table">Mesa ${order.tables.number}</span><span class="time">${new Date(item.created_at).toLocaleTimeString()}</span></div>
+                html += `<div style="background:white;padding:14px;border-radius:12px;margin-bottom:10px;border-left:4px solid #FF6B35;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                        <strong>Mesa ${order.tables.number}</strong>
+                        <small>${new Date(item.created_at).toLocaleTimeString()}</small>
+                    </div>
                     <div>${item.quantity}x ${item.product_name}</div>
                 </div>`;
             });
         }
     }
     
-    document.getElementById('content').innerHTML = html || '<p style="text-align:center;padding:40px;">Nenhum item pendente</p>';
+    document.getElementById('conteudo').innerHTML = html || '<div class="aviso">Nenhum item pendente</div>';
 }
 
 // COMANDAS ATIVAS
 async function carregarComandas() {
-    const { data: orders } = await db.from('orders').select('*, tables(number)').eq('status', 'open');
+    const { data: orders } = await db.from('orders')
+        .select('*, tables(number)')
+        .eq('status', 'open');
     
     if (!orders || orders.length === 0) {
-        document.getElementById('content').innerHTML = '<p style="text-align:center;padding:40px;color:#999;">Nenhuma comanda aberta</p>';
+        document.getElementById('conteudo').innerHTML = '<div class="aviso">Nenhuma comanda aberta</div>';
         return;
     }
     
     let html = '';
+    
     orders.forEach(order => {
-        html += `<div class="order-card" onclick="abrirMesa(${order.table_id}, 'occupied')">
-            <div class="top"><span class="table">Mesa ${order.tables.number}</span><span class="time">${new Date(order.created_at).toLocaleTimeString()}</span></div>
+        html += `<div onclick="abrirMesa(${order.table_id}, 'occupied')" style="background:white;padding:14px;border-radius:12px;margin-bottom:10px;cursor:pointer;border-left:4px solid #FF9800;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                <strong>Mesa ${order.tables.number}</strong>
+                <small>${new Date(order.created_at).toLocaleTimeString()}</small>
+            </div>
             <div style="font-size:20px;font-weight:bold;color:#FF6B35;">R$ ${(order.total||0).toFixed(2)}</div>
         </div>`;
     });
     
-    document.getElementById('content').innerHTML = html || '<p style="text-align:center;padding:40px;">Nenhuma comanda aberta</p>';
+    document.getElementById('conteudo').innerHTML = html;
 }
 
-// FUNÇÕES AUXILIARES
-function fecharModal() { document.getElementById('modal').classList.remove('show'); }
-function mostrarToast(msg) {
-    const t = document.createElement('div');
-    t.className = 'toast';
-    t.textContent = msg;
-    document.body.appendChild(t);
-    setTimeout(() => t.remove(), 2000);
-}
+// MODAL
+function fecharModal() { document.getElementById('fundo').classList.remove('mostrar'); }
 </script>
 </body>
-    </html>
+</html>
